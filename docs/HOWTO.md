@@ -21,6 +21,14 @@ That means there are two layers:
 The app does not replace normal ERPNext roles and it does not create a special
 worker role of its own.
 
+Users participating in this Desk-based workflow must nevertheless be **System
+Users with Desk access**. That is a Frappe/ERPNext prerequisite rather than an
+app-specific Project/Task role. ERPNext Project Access does not itself convert a
+Website User into a System User or grant Desk access.
+
+For a generic reference permission model, see
+[ROLE_SETUP.md](ROLE_SETUP.md).
+
 For existing documents, a non-owner must have an explicit user-specific
 `DocShare` entry for the required access. Broad roles do not bypass this scope
 boundary.
@@ -67,9 +75,11 @@ open the Task's parent Project. This separation is intentional.
 
 ## 3. Assignment and sharing
 
-The controlled worker workflow requires the user to be an **active assignee** of
-the Task. In the current implementation, that means there must be an **Open
-ToDo** for the user referring to that Task.
+The worker must first be a System User who can use Desk.
+
+The controlled worker workflow also requires the user to be an **active
+assignee** of the Task. In the current implementation, that means there must be
+an **Open ToDo** for the user referring to that Task.
 
 ERPNext assignment normally creates the Read access needed for the assignee to
 open the Task. The app ultimately checks the resulting Task access; it does not
@@ -85,7 +95,7 @@ controlled workflow buttons described below.
 
 The validated alpha workflow has two participants:
 
-- **Worker** — an active Task assignee.
+- **Worker** — a Desk-capable System User who is an active Task assignee.
 - **Reviewer** — currently the **Task owner**.
 
 There is no separate configurable Reviewer field in `v0.1.0-alpha.1`.
@@ -205,6 +215,7 @@ In the validated alpha test, completion also:
 
 A typical restricted worker should be able to:
 
+- use Desk as a System User,
 - see an explicitly accessible / assigned Task,
 - open that Task,
 - use **Start Work** when the Task is Open,
@@ -220,8 +231,8 @@ The same worker does not need to be able to:
 - delete or administratively manage the Task.
 
 Normal role permissions still matter. ERPNext Project Access narrows document
-scope; it does not grant general Desk or DocType permissions that the user does
-not otherwise have.
+scope; it does not grant Desk access or general DocType permissions that the
+user does not otherwise have.
 
 ## 7. What the reviewer should and should not be able to do
 
@@ -241,8 +252,8 @@ They are not a general-purpose bypass for arbitrary Task edits.
 
 Use three objects/users:
 
-- a creator/reviewer user,
-- a restricted worker user,
+- a creator/reviewer System User,
+- a restricted worker System User,
 - one private Project containing one Task assigned to the worker.
 
 Then verify this sequence:
@@ -263,6 +274,12 @@ Then verify this sequence:
 This is the end-to-end scenario validated for the first alpha deployment.
 
 ## 9. Troubleshooting
+
+### Worker cannot use Desk
+
+Confirm that the account is a **System User** with Desk access. ERPNext Project
+Access does not grant Desk access and does not require a particular role name to
+provide it.
 
 ### Assigned Task does not appear in Task List
 
@@ -325,7 +342,7 @@ The first alpha deliberately keeps the model small:
 - Reviewer is the Task owner; there is no separate Reviewer field yet.
 - Access scope is based on ownership and explicit user-specific DocShare.
 - Controlled workflow actions cover only the transitions documented above.
-- The app does not replace ERPNext role configuration.
+- The app does not replace ERPNext role configuration or grant Desk access.
 - Compatibility has only been validated on the environment listed above.
 
 These constraints are intentional while the access and workflow model is being
