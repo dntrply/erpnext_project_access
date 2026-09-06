@@ -16,24 +16,20 @@ def clear_local_activation_cache():
 def is_enabled():
 	"""Return whether ERPNext Project Access is explicitly enabled for this site.
 
-	The feature deliberately fails open to native ERPNext behavior when the
-	settings DocType is not yet available (for example during installation or
-	migration). Fresh installations default to disabled.
+	If the settings DocType does not yet exist (for example while a fresh install
+	is being synchronized), the app is neutral and native ERPNext behavior
+	continues. Once the settings DocType exists, database errors are deliberately
+	not swallowed: an enabled security policy must never silently fail open.
 	"""
 	if hasattr(frappe.local, _LOCAL_CACHE_KEY):
 		return getattr(frappe.local, _LOCAL_CACHE_KEY)
 
-	enabled = False
-
-	try:
-		if frappe.db.exists("DocType", SETTINGS_DOCTYPE):
-			enabled = bool(
-				cint(frappe.db.get_single_value(SETTINGS_DOCTYPE, "enabled"))
-			)
-	except Exception:
-		# A missing/incomplete settings schema must never make installation or
-		# migration accidentally enforce the Project/Task access fence.
+	if not frappe.db.exists("DocType", SETTINGS_DOCTYPE):
 		enabled = False
+	else:
+		enabled = bool(
+			cint(frappe.db.get_single_value(SETTINGS_DOCTYPE, "enabled"))
+		)
 
 	setattr(frappe.local, _LOCAL_CACHE_KEY, enabled)
 	return enabled
