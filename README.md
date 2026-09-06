@@ -1,14 +1,13 @@
 # ERPNext Project Access
 
-> **Status: Alpha**
+> **Status: Alpha — current prerelease: `v0.1.0-alpha.2`**
 
 ERPNext Project Access adds scoped access control and controlled Task workflow
 actions to ERPNext Projects and Tasks.
 
-The project is under active development. Its first real-world alpha deployment
-validated the access-control and workflow model; alpha.2 development adds an
-explicit administrator activation switch so a fresh installation is passive
-until enabled.
+The project is under active development. `v0.1.0-alpha.2` adds an explicit
+administrator activation switch so a fresh installation is passive until a
+System Manager enables it.
 
 ## Safe-by-default activation
 
@@ -86,25 +85,59 @@ persists and what access may change when the app is disabled or removed.
 
 ## Alpha compatibility
 
-The first end-to-end workflow validation was performed with:
+### Clean stable-v16 smoke test
+
+A clean installation/activation smoke test passes against the official ERPNext
+v16 container with:
+
+- Frappe Framework 16.33.0
+- ERPNext 16.34.1
+- MariaDB 11.8
+- Redis 8
+- ERPNext Project Access 0.1.0a2
+
+That automated smoke test creates a fresh ERPNext site, installs this app,
+confirms that a fresh installation starts disabled, verifies that the Project
+and Task query hooks are neutral while disabled, enables the app, and verifies
+that the enabled query conditions contain the explicit-share fence.
+
+This smoke test is **not** a full worker/reviewer workflow certification for
+stable ERPNext v16.
+
+### End-to-end reference workflow
+
+The complete worker/reviewer workflow has also been exercised end-to-end on the
+JSS reference deployment with:
 
 - Frappe Framework 16.29.0
 - ERPNext 17.0.0-dev
 - HRMS 17.0.0-dev
-- ERPNext Project Access 0.1.0a1 / release tag `v0.1.0-alpha.1`
+- ERPNext Project Access 0.1.0a2 / release tag `v0.1.0-alpha.2`
 
-The alpha.2 activation switch is under validation and should not yet be treated
-as a tagged release.
+That reference deployment validated restricted Task access with a private parent
+Project, disable/re-enable behavior, and the complete workflow:
+
+```text
+Open → Working → Pending Review → Working → Pending Review → Completed
+```
+
+The JSS environment is an intentionally mixed development stack and should not
+be interpreted as a broad compatibility guarantee.
 
 Frappe versions prior to 16.29.0 contain a linked-table permission-query issue
 that can cause an otherwise readable Task to be omitted from Task List when its
 linked Project is inaccessible. For this alpha, Frappe 16.29.0 or newer is
 recommended unless an equivalent fix has been independently validated.
 
-The first validation environment is an unusual mixed development environment
-and should not be interpreted as a general compatibility guarantee.
-
 Additional ERPNext/Frappe versions will be documented only after testing.
+
+## Release
+
+The current prerelease is
+[`v0.1.0-alpha.2`](https://github.com/dntrply/erpnext_project_access/releases/tag/v0.1.0-alpha.2).
+
+Alpha-quality software: APIs, configuration, permissions behavior and workflow
+behavior may still change before a stable release.
 
 ## License
 
