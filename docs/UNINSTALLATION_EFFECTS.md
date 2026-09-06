@@ -1,6 +1,6 @@
 # Disable and Uninstall Effects
 
-> **Status: alpha.2 development**
+> **Status: `v0.1.0-alpha.2` prerelease**
 >
 > Alpha.2 separates **disabling the policy** from **uninstalling the app**.
 > Administrators should normally disable first, verify native ERPNext behavior,
