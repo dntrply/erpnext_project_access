@@ -97,7 +97,127 @@ In particular, `Share` was present in the tested creator role because that role
 was used for the pilot's normal Project/Task setup. It should not be interpreted
 as a requirement of the controlled reviewer action itself.
 
-## 5. ToDo permissions
+## 5. Creating the reference creator role in ERPNext
+
+A new installation that does not already have an appropriate creator role can
+reproduce the validated alpha configuration with a local role. The role name is
+arbitrary; the example below uses **Project Access Creator**.
+
+### Step A — Create the role
+
+1. In Desk, open **Role**.
+2. Create a new Role named `Project Access Creator`.
+3. Enable **Desk Access**.
+4. Leave the role enabled and save it.
+
+The purpose of Desk Access is to make this a role suitable for a System User who
+works in ERPNext Desk. ERPNext Project Access does not depend on the literal role
+name.
+
+### Step B — Configure Project permissions
+
+Open **Role Permission Manager** and select:
+
+- Role: `Project Access Creator`
+- DocType: `Project`
+- Permission Level: `0`
+
+Configure the permission row as follows:
+
+| Permission | Setting |
+| --- | --- |
+| Read | Yes |
+| Write | Yes |
+| Create | Yes |
+| Delete | No |
+| Report | No |
+| Export | No |
+| Import | No |
+| Share | Yes |
+| Print | No |
+| Email | No |
+| If Owner | **Yes** |
+
+Save the permission configuration.
+
+### Step C — Configure Task permissions
+
+In **Role Permission Manager**, select:
+
+- Role: `Project Access Creator`
+- DocType: `Task`
+- Permission Level: `0`
+
+Use the same settings:
+
+| Permission | Setting |
+| --- | --- |
+| Read | Yes |
+| Write | Yes |
+| Create | Yes |
+| Delete | No |
+| Report | No |
+| Export | No |
+| Import | No |
+| Share | Yes |
+| Print | No |
+| Email | No |
+| If Owner | **Yes** |
+
+Save the permission configuration.
+
+### Step D — Assign the role to the creator/reviewer user
+
+1. Open the User who will create Projects and Tasks.
+2. Ensure the account is a **System User**.
+3. Add the `Project Access Creator` role.
+4. Save the User.
+5. Log out and back in as that user before performing the acceptance test.
+
+In `v0.1.0-alpha.1`, the simplest trial is for this same user to create the Task
+and later review it, because the Task owner is the reviewer.
+
+### Why `If Owner` is important
+
+The reference role is deliberately owner-scoped. Its normal ERPNext role
+permission is approximately:
+
+> Create Projects and Tasks, and maintain the ones you own.
+
+It is not intended to mean:
+
+> Freely edit every Project and Task in the system.
+
+ERPNext Project Access then applies its document-level ownership/share boundary
+to existing Projects and Tasks.
+
+## 6. Optional reference Desk-only role for a restricted worker
+
+A brand-new installation may also need a small local role solely to make a
+restricted worker a Desk-capable System User. If there is already an appropriate
+Desk-access role on the site, reuse it instead.
+
+For a clean evaluation, a local role can be created with a name such as:
+
+`Project Access Desk User`
+
+Configure it as follows:
+
+1. Create the Role.
+2. Enable **Desk Access**.
+3. Do **not** add Project, Task, or ToDo DocType permissions merely for the
+   controlled worker workflow.
+4. Assign the role to the worker and ensure the User is a **System User**.
+
+The validated alpha deployment used exactly this pattern: its local Desk-access
+role had no custom Project, Task, or ToDo permission rows. The worker received
+access to the particular Task through the normal assignment/share mechanism and
+used the app's narrowly controlled Task actions without general Task Write.
+
+This Desk-only role is a reference convenience, not a role that the open-source
+app requires by name.
+
+## 7. ToDo permissions
 
 The validated deployment did not add any custom `ToDo` permission through its
 local Desk-access role or creator role.
@@ -107,20 +227,21 @@ Because the alpha has not independently reduced all built-in/effective Frappe
 permissions around `ToDo`, this should not yet be interpreted as a broad claim
 that no `ToDo` permission can ever be required in every ERPNext/Frappe version.
 
-## 6. Recommended evaluation setup
+## 8. Recommended evaluation setup
 
 For a minimal evaluation, use two System Users:
 
 ### User A — Creator / Reviewer
 
-Give User A an ordinary role configuration that permits the user to create and
-maintain their own Projects and Tasks. The table above is one validated example.
+Either reuse an existing role that provides equivalent capabilities or create
+`Project Access Creator` using the steps above.
 
 ### User B — Restricted Worker
 
 Give User B whatever local role is necessary to make the account a System User
-with Desk access, but do not grant broad Task Write permission merely for this
-workflow.
+with Desk access. If the site has no suitable baseline role, the optional
+`Project Access Desk User` reference role above can be used. Do not grant broad
+Task Write permission merely for this workflow.
 
 Then:
 
@@ -134,7 +255,7 @@ Then:
 
 See [HOWTO.md](HOWTO.md) for the full acceptance workflow.
 
-## 7. What downstream deployments should customize
+## 9. What downstream deployments should customize
 
 Organizations are expected to keep their own role names and broader permission
 model.
