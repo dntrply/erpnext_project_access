@@ -1,6 +1,6 @@
 # Install, Activate, Disable and Uninstall
 
-> **Status: alpha.2 development**
+> **Status: `v0.1.0-alpha.2` prerelease**
 >
 > These commands are for a self-managed Frappe/ERPNext Bench. Managed platforms
 > such as Frappe Cloud may expose equivalent actions through their own UI.
@@ -19,15 +19,13 @@ Read [ACTIVATION.md](ACTIVATION.md) and
 [INSTALLATION_EFFECTS.md](INSTALLATION_EFFECTS.md) before enabling on a site with
 existing Projects and Tasks.
 
-## 2. Install for alpha.2 development testing
+## 2. Install the alpha.2 prerelease
 
-The alpha.2 activation switch is not yet a tagged release. Until validation is
-complete, test the development branch rather than treating it as a public
-release:
+Fetch the tagged prerelease into the Bench:
 
 ```bash
 cd /path/to/frappe-bench
-bench get-app --branch alpha2-config-switch \
+bench get-app --branch v0.1.0-alpha.2 \
   https://github.com/dntrply/erpnext_project_access.git
 ```
 
@@ -119,24 +117,25 @@ other installed customizations remain in force.
 Disabling does not undo Task statuses, ownership, assignments, shares or local
 role configuration that changed while the app was enabled.
 
-## 7. Upgrading an existing alpha.1 installation
+## 7. Upgrade an existing alpha.1 installation
 
 `v0.1.0-alpha.1` was active immediately after installation. To avoid an upgrade
 unexpectedly broadening access, an existing alpha.1 site remains **enabled** when
 upgraded to alpha.2 through `bench migrate`.
 
-For development testing from an existing checkout:
+For a clean Git checkout of the app, fetch the immutable alpha.2 tag and check it
+out:
 
 ```bash
 cd /path/to/frappe-bench/apps/erpnext_project_access
-git fetch origin
-git switch alpha2-config-switch
-git pull --ff-only
+git fetch --tags origin
+git switch --detach v0.1.0-alpha.2
 ```
 
 Then from the Bench directory:
 
 ```bash
+cd /path/to/frappe-bench
 bench --site your-site.example.com migrate
 bench build --app erpnext_project_access
 ```
@@ -148,6 +147,9 @@ verify that the previously validated restricted-access behavior still holds.
 
 The migration patch intentionally preserves alpha.1 behavior. Do not assume an
 upgrade will disable the app automatically.
+
+If the app checkout contains local modifications, do not discard them blindly;
+review and preserve them before switching to the release tag.
 
 ## 8. Before uninstalling
 
@@ -231,3 +233,13 @@ Ordinary site state may remain, including:
 - assignment/ToDo lifecycle changes already performed by ERPNext.
 
 See [UNINSTALLATION_EFFECTS.md](UNINSTALLATION_EFFECTS.md) for details.
+
+## 13. Tested environments
+
+The alpha.2 install/activation smoke test passes on a clean ERPNext v16 stack
+using Frappe 16.33.0 and ERPNext 16.34.1. The complete worker/reviewer workflow
+has separately been exercised on the JSS reference deployment using Frappe
+16.29.0 and ERPNext 17.0.0-dev.
+
+See the README compatibility section for the exact scope and caveats of each
+test; neither result should be interpreted as a broad compatibility guarantee.

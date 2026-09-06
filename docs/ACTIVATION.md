@@ -1,6 +1,6 @@
 # Activation and Configuration
 
-> **Status: alpha.2 development**
+> **Status: `v0.1.0-alpha.2` prerelease**
 >
 > ERPNext Project Access is designed to be installed **without immediately
 > changing Project or Task access**. A fresh installation is disabled by default.
@@ -171,4 +171,5 @@ For a clean trial:
 8. Re-enable it and repeat the key access checks before considering production
    use.
 
-This enable/disable cycle is part of the alpha.2 validation plan.
+This enable/disable cycle was exercised during alpha.2 validation and remains the
+recommended evaluation sequence for testers.
