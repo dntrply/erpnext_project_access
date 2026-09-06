@@ -2,7 +2,6 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-
 SETTINGS_DOCTYPE = "ERPNext Project Access Settings"
 _LOCAL_CACHE_KEY = "_erpnext_project_access_enabled"
 

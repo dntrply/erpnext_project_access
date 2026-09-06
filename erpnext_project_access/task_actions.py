@@ -3,7 +3,6 @@ from frappe import _
 
 from erpnext_project_access.settings import is_enabled, require_enabled
 
-
 ALLOWED_ASSIGNEE_TRANSITIONS = {
 	"Open": "Working",
 	"Working": "Pending Review",

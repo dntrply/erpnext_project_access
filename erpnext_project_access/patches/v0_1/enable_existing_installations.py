@@ -1,6 +1,5 @@
 import frappe
 
-
 SETTINGS_DOCTYPE = "ERPNext Project Access Settings"
 
 
