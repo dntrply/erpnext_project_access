@@ -6,7 +6,7 @@ ERPNext Project Access adds scoped access control and controlled Task workflow
 actions to ERPNext Projects and Tasks.
 
 The project is under active development. Its first real-world alpha deployment
-is being used to validate the access-control and workflow model before a stable
+has been used to validate the access-control and workflow model before a stable
 release.
 
 ## Current capabilities
@@ -34,12 +34,30 @@ Projects and Tasks a user may access.
 Controlled workflow actions allow narrowly authorized state transitions without
 granting general Write permission to the document.
 
+## How to use it
+
+See [docs/HOWTO.md](docs/HOWTO.md) for the validated alpha workflow, including:
+
+- Project and Task access rules
+- Task assignment and sharing
+- Worker actions: Start Work and Submit for Review
+- Reviewer actions: Return for Rework and Approve & Complete
+- A minimal end-to-end acceptance test
+- Troubleshooting guidance
+
 ## Alpha compatibility
 
-The first alpha deployment is currently being exercised with:
+The first end-to-end alpha validation was performed with:
 
-- Frappe Framework 16.19.0
+- Frappe Framework 16.29.0
 - ERPNext 17.0.0-dev
+- HRMS 17.0.0-dev
+- ERPNext Project Access 0.1.0a1 / release tag v0.1.0-alpha.1
+
+Frappe versions prior to 16.29.0 contain a linked-table permission-query issue
+that can cause an otherwise readable Task to be omitted from Task List when its
+linked Project is inaccessible. For this alpha, Frappe 16.29.0 or newer is
+recommended unless an equivalent fix has been independently validated.
 
 This is an unusual mixed development environment and should not be interpreted
 as a general compatibility guarantee.
