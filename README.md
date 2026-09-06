@@ -9,6 +9,24 @@ The project is under active development. Its first real-world alpha deployment
 has been used to validate the access-control and workflow model before a stable
 release.
 
+## Important: installation changes existing Project/Task access
+
+Installing this app is **not passive** on a site that already contains Projects
+and Tasks.
+
+Once the app's permission hooks are active, non-Administrator access to existing
+Projects and Tasks is additionally constrained to records the user **owns or has
+been explicitly shared**. A user who previously relied on a broad ERPNext role
+to see many Projects or Tasks may therefore see fewer records immediately after
+installation, even if no role configuration is changed afterward.
+
+The app does not automatically change ownership, create shares, change Task
+statuses, create mandatory roles, or grant Desk access.
+
+Before installing on an existing production site, read
+[docs/INSTALLATION_EFFECTS.md](docs/INSTALLATION_EFFECTS.md) and evaluate the
+alpha on a staging/test site with representative users.
+
 ## Current capabilities
 
 - Project visibility restricted to owners and explicitly shared users
@@ -56,6 +74,10 @@ including:
 - a restricted worker persona
 - a creator/reviewer reference configuration
 - which permissions are app requirements versus deployment choices
+
+See [docs/INSTALLATION_EFFECTS.md](docs/INSTALLATION_EFFECTS.md) for the exact
+behavioral changes that occur simply because the app has been installed and its
+hooks are active.
 
 ## Alpha compatibility
 
