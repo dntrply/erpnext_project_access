@@ -1,6 +1,6 @@
 # Installation and Activation Effects
 
-> **Status: alpha.2 development**
+> **Status: `v0.1.0-alpha.2` prerelease**
 >
 > Fresh alpha.2 installations are **disabled by default**. Installation itself
 > is intended to be passive. The access-control behavior described below begins
