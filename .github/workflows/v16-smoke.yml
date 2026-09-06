@@ -1,0 +1,105 @@
+name: Frappe v16 smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "erpnext_project_access/**"
+      - "pyproject.toml"
+      - ".github/workflows/v16-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  clean-stack-smoke:
+    name: Clean ERPNext v16 install
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_ROOT_HOST: "%"
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+      redis:
+        image: redis:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install app on clean ERPNext v16 image
+        run: |
+          docker run --rm \
+            --network host \
+            --entrypoint bash \
+            -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            frappe/erpnext:v16.34.1 \
+            -lc '
+              set -euo pipefail
+              cd /home/frappe/frappe-bench
+
+              rm -rf apps/erpnext_project_access
+              mkdir -p apps/erpnext_project_access
+              cp -a /workspace/. apps/erpnext_project_access/
+
+              ./env/bin/pip install -e apps/erpnext_project_access
+              grep -qxF erpnext_project_access sites/apps.txt || echo erpnext_project_access >> sites/apps.txt
+
+              bench set-config -g db_host 127.0.0.1
+              bench set-config -g redis_cache redis://127.0.0.1:6379
+              bench set-config -g redis_queue redis://127.0.0.1:6379
+
+              bench new-site smoke.local \
+                --db-host 127.0.0.1 \
+                --db-root-username root \
+                --db-root-password root \
+                --mariadb-user-host-login-scope=% \
+                --admin-password admin \
+                --install-app erpnext
+
+              bench --site smoke.local install-app erpnext_project_access
+              bench --site smoke.local list-apps
+
+              bench --site smoke.local console <<"PY"
+          from erpnext_project_access.project_acl import get_project_permission_query_conditions
+          from erpnext_project_access.settings import (
+              SETTINGS_DOCTYPE,
+              clear_local_activation_cache,
+              is_enabled,
+          )
+          from erpnext_project_access.task_acl import get_task_permission_query_conditions
+
+          assert frappe.db.exists("DocType", SETTINGS_DOCTYPE)
+          assert int(frappe.db.get_single_value(SETTINGS_DOCTYPE, "enabled") or 0) == 0
+          assert is_enabled() is False
+          assert get_project_permission_query_conditions("worker@example.com") == ""
+          assert get_task_permission_query_conditions("worker@example.com") == ""
+
+          frappe.db.set_single_value(SETTINGS_DOCTYPE, "enabled", 1)
+          frappe.db.commit()
+          clear_local_activation_cache()
+
+          assert is_enabled() is True
+          assert "tabDocShare" in get_project_permission_query_conditions("worker@example.com")
+          assert "tabDocShare" in get_task_permission_query_conditions("worker@example.com")
+
+          print("clean ERPNext v16 smoke passed")
+          PY
+            '
