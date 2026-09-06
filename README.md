@@ -27,6 +27,57 @@ Before installing on an existing production site, read
 [docs/INSTALLATION_EFFECTS.md](docs/INSTALLATION_EFFECTS.md) and evaluate the
 alpha on a staging/test site with representative users.
 
+## Install
+
+For a self-managed Bench, the tagged alpha can be installed with:
+
+```bash
+bench get-app --branch v0.1.0-alpha.1 \
+  https://github.com/dntrply/erpnext_project_access.git
+
+bench --site your-site.example.com install-app erpnext_project_access
+bench --site your-site.example.com migrate
+bench build --app erpnext_project_access
+```
+
+Then reload/restart Frappe processes using the mechanism appropriate to your
+deployment and verify:
+
+```bash
+bench --site your-site.example.com list-apps
+```
+
+For full installation instructions, deployment notes, verification, and the
+required pre-install warning, see [docs/INSTALL.md](docs/INSTALL.md).
+
+## Uninstall
+
+Before uninstalling, read
+[docs/UNINSTALLATION_EFFECTS.md](docs/UNINSTALLATION_EFFECTS.md). Removing the
+app removes its Project/Task access fence, so users with broad native ERPNext
+permissions may regain wider visibility.
+
+Preview the uninstall first:
+
+```bash
+bench --site your-site.example.com uninstall-app erpnext_project_access --dry-run
+```
+
+Then, when ready:
+
+```bash
+bench --site your-site.example.com uninstall-app erpnext_project_access
+```
+
+Frappe's uninstall command takes a site backup by default. Do not use
+`--no-backup` casually for this alpha.
+
+Uninstall is **not** a historical rollback: Task statuses, shares, assignments,
+ownership changes, locally created roles, and System User configuration made
+during the trial are not automatically restored to their pre-install state.
+
+See [docs/INSTALL.md](docs/INSTALL.md) for the complete uninstall procedure.
+
 ## Current capabilities
 
 - Project visibility restricted to owners and explicitly shared users
@@ -78,6 +129,9 @@ including:
 See [docs/INSTALLATION_EFFECTS.md](docs/INSTALLATION_EFFECTS.md) for the exact
 behavioral changes that occur simply because the app has been installed and its
 hooks are active.
+
+See [docs/UNINSTALLATION_EFFECTS.md](docs/UNINSTALLATION_EFFECTS.md) for the
+behavioral changes and persistent site state to expect when the app is removed.
 
 ## Alpha compatibility
 
