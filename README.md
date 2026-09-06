@@ -34,6 +34,10 @@ Projects and Tasks a user may access.
 Controlled workflow actions allow narrowly authorized state transitions without
 granting general Write permission to the document.
 
+The app does not require particular role names or install a mandatory Worker or
+Project Creator role. Users participating in the Desk workflow must, however,
+be System Users with Desk access; the app does not itself grant Desk access.
+
 ## How to use it
 
 See [docs/HOWTO.md](docs/HOWTO.md) for the validated alpha workflow, including:
@@ -44,6 +48,14 @@ See [docs/HOWTO.md](docs/HOWTO.md) for the validated alpha workflow, including:
 - Reviewer actions: Return for Rework and Approve & Complete
 - A minimal end-to-end acceptance test
 - Troubleshooting guidance
+
+See [docs/ROLE_SETUP.md](docs/ROLE_SETUP.md) for the reference permission model,
+including:
+
+- the System User / Desk-access prerequisite
+- a restricted worker persona
+- a creator/reviewer reference configuration
+- which permissions are app requirements versus deployment choices
 
 ## Alpha compatibility
 
