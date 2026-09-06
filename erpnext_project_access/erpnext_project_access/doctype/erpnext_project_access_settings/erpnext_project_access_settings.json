@@ -5,7 +5,8 @@
  "engine": "InnoDB",
  "field_order": [
   "enabled",
-  "activation_warning"
+  "disabled_warning",
+  "enabled_warning"
  ],
  "fields": [
   {
@@ -16,9 +17,16 @@
    "label": "Enable ERPNext Project Access"
   },
   {
-   "fieldname": "activation_warning",
+   "depends_on": "eval:!doc.enabled",
+   "fieldname": "disabled_warning",
    "fieldtype": "HTML",
-   "options": "<div class=\"alert alert-warning\"><strong>Access policy change:</strong> Enabling this setting can immediately reduce which existing Projects and Tasks non-Administrator users can see. Review ownership and explicit shares before enabling it on an existing site.</div>"
+   "options": "<div class=\"alert alert-warning\"><strong>Currently disabled:</strong> ERPNext Project Access is installed but not active. Enabling it can immediately reduce which existing Projects and Tasks non-Administrator users can see. Review ownership and explicit shares before enabling it on an existing site.</div>"
+  },
+  {
+   "depends_on": "eval:doc.enabled",
+   "fieldname": "enabled_warning",
+   "fieldtype": "HTML",
+   "options": "<div class=\"alert alert-warning\"><strong>Currently enabled:</strong> The owner-or-explicit-share access fence and controlled Task workflow are active. Disabling this setting removes that additional fence and may allow users with broader native ERPNext permissions to see more Projects or Tasks. Review your normal roles and permissions before disabling it.</div>"
   }
  ],
  "issingle": 1,
