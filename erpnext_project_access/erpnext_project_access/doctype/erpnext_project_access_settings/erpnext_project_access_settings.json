@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "creation": "2026-09-06 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "activation_warning"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "When enabled, non-Administrator Project and Task access is additionally restricted to documents the user owns or that are explicitly shared with that user. Controlled Task workflow actions are also enabled.",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enable ERPNext Project Access"
+  },
+  {
+   "fieldname": "activation_warning",
+   "fieldtype": "HTML",
+   "options": "<div class=\"alert alert-warning\"><strong>Access policy change:</strong> Enabling this setting can immediately reduce which existing Projects and Tasks non-Administrator users can see. Review ownership and explicit shares before enabling it on an existing site.</div>"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-09-06 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "ERPNext Project Access",
+ "name": "ERPNext Project Access Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
