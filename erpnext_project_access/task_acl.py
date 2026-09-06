@@ -1,80 +1,90 @@
 import frappe
 
+from erpnext_project_access.settings import is_enabled
+
 
 def get_task_permission_query_conditions(user=None):
-    """Limit Task lists to tasks owned by or explicitly shared with user."""
-    user = user or frappe.session.user
+	"""Limit Task lists to tasks owned by or explicitly shared with user."""
+	if not is_enabled():
+		return ""
 
-    if user == "Administrator":
-        return ""
+	user = user or frappe.session.user
 
-    user_escaped = frappe.db.escape(user)
+	if user == "Administrator":
+		return ""
 
-    return f"""
-        (
-            `tabTask`.`owner` = {user_escaped}
-            OR EXISTS (
-                SELECT 1
-                FROM `tabDocShare`
-                WHERE
-                    `tabDocShare`.`share_doctype` = 'Task'
-                    AND `tabDocShare`.`share_name` = `tabTask`.`name`
-                    AND `tabDocShare`.`user` = {user_escaped}
-                    AND `tabDocShare`.`read` = 1
-            )
-        )
-    """
+	user_escaped = frappe.db.escape(user)
+
+	return f"""
+		(
+			`tabTask`.`owner` = {user_escaped}
+			OR EXISTS (
+				SELECT 1
+				FROM `tabDocShare`
+				WHERE
+					`tabDocShare`.`share_doctype` = 'Task'
+					AND `tabDocShare`.`share_name` = `tabTask`.`name`
+					AND `tabDocShare`.`user` = {user_escaped}
+					AND `tabDocShare`.`read` = 1
+			)
+		)
+	"""
 
 
 def _has_task_share(docname, user, right):
-    return bool(
-        frappe.db.exists(
-            "DocShare",
-            {
-                "share_doctype": "Task",
-                "share_name": docname,
-                "user": user,
-                right: 1,
-            },
-        )
-    )
+	return bool(
+		frappe.db.exists(
+			"DocShare",
+			{
+				"share_doctype": "Task",
+				"share_name": docname,
+				"user": user,
+				right: 1,
+			},
+		)
+	)
 
 
 def has_task_permission(doc, ptype="read", user=None, debug=False):
-    """
-    Task access control fence.
+	"""
+	Task access control fence.
 
-    Normal Frappe/ERPNext role permissions still apply.
+	Normal Frappe/ERPNext role permissions still apply. When ERPNext Project
+	Access is disabled, this hook is deliberately neutral and native permissions
+	remain in effect.
 
-    For an existing Task, a non-owner must additionally have an explicit
-    DocShare entry for the requested access.
-    """
-    user = user or frappe.session.user
+	For an existing Task, a non-owner must additionally have an explicit
+	DocShare entry for the requested access.
+	"""
+	if not is_enabled():
+		return True
 
-    if user == "Administrator":
-        return True
+	user = user or frappe.session.user
 
-    # New Task creation remains controlled by normal role permissions.
-    if doc.is_new():
-        return True
+	if user == "Administrator":
+		return True
 
-    # Task creator/owner remains controlled by normal role permissions.
-    if doc.owner == user:
-        return True
+	# New Task creation remains controlled by normal role permissions.
+	if doc.is_new():
+		return True
 
-    # Frappe may evaluate the complete permission dictionary with ptype=None.
-    if ptype is None:
-        return _has_task_share(doc.name, user, "read")
+	# Task creator/owner remains controlled by normal role permissions.
+	if doc.owner == user:
+		return True
 
-    if ptype in ("read", "select", "print", "email"):
-        return _has_task_share(doc.name, user, "read")
+	# Frappe may evaluate the complete permission dictionary with ptype=None.
+	if ptype is None:
+		return _has_task_share(doc.name, user, "read")
 
-    if ptype == "write":
-        return _has_task_share(doc.name, user, "write")
+	if ptype in ("read", "select", "print", "email"):
+		return _has_task_share(doc.name, user, "read")
 
-    if ptype == "share":
-        return _has_task_share(doc.name, user, "share")
+	if ptype == "write":
+		return _has_task_share(doc.name, user, "write")
 
-    # Do not let a broad role such as HR Manager provide delete or other
-    # administrative Task rights to a non-owner.
-    return False
+	if ptype == "share":
+		return _has_task_share(doc.name, user, "share")
+
+	# Do not let a broad role such as HR Manager provide delete or other
+	# administrative Task rights to a non-owner.
+	return False

@@ -1,97 +1,103 @@
-# What Changes Immediately After Installation
+# Installation and Activation Effects
 
-> **Status: Alpha**
+> **Status: alpha.2 development**
 >
-> Installing ERPNext Project Access is **not a passive installation** on an
-> existing ERPNext site. The app registers permission hooks for `Project` and
-> `Task`, so access to existing records can change as soon as the app is active.
->
-> Evaluate this alpha on a test or staging site before installing it on a
-> production system with existing Projects and Tasks.
+> Fresh alpha.2 installations are **disabled by default**. Installation itself
+> is intended to be passive. The access-control behavior described below begins
+> only after a System Manager explicitly enables ERPNext Project Access.
 
-## 1. The app does not wait for a special role to be configured
+## 1. Fresh install: no Project/Task behavior change while disabled
 
-ERPNext Project Access does not require a role named `Worker`, `Project Access
-Creator`, or any other app-specific role before its access rules become active.
+After a fresh install and migration, the setting:
 
-Once the app is installed and its hooks are loaded, the document-level access
-rules apply to Project and Task for non-Administrator users.
+**ERPNext Project Access Settings → Enable ERPNext Project Access**
 
-Normal Frappe/ERPNext role permissions still apply as the first permission
-layer. The app adds an additional document-level fence.
+is off.
 
-## 2. Existing Project visibility becomes owner/share based
+While it remains off:
 
-For a non-Administrator user, an existing Project is visible through the app
+- Project lists use native ERPNext/Frappe permission behavior,
+- Task lists use native ERPNext/Frappe permission behavior,
+- direct Project/Task permission checks are not narrowed by this app,
+- the app's controlled Task workflow buttons are not offered,
+- the app's controlled status-mutation endpoints reject use.
+
+The app does not wait for a special role to be configured, but it also does not
+activate its policy merely because it is installed.
+
+## 2. Enabling is the policy-changing action
+
+Once a System Manager explicitly enables the app, normal ERPNext role
+permissions continue to apply as the first permission layer and the app adds a
+second, document-level fence.
+
+For non-Administrator users, existing Project and Task scope becomes based on:
+
+- ownership, or
+- an explicit user-specific `DocShare` with the required right.
+
+This can immediately reduce visibility for users who previously relied on broad
+role-based access.
+
+## 3. Existing Project visibility when enabled
+
+For a non-Administrator user, an existing Project is in scope through this app
 only when either:
 
 - the user is the Project owner, or
 - the Project has an explicit user-specific `DocShare` with Read access.
 
-This means a user who previously saw many Projects only because of a broad
-ERPNext role may see fewer Projects immediately after installation.
-
-A broad role does not by itself bypass this document-level fence.
-
 For a non-owner Project:
 
-- Read / Select / Print / Email require an explicit Read share.
-- Write requires an explicit Write share.
-- Share requires an explicit Share right.
-- Other destructive or administrative permission types are denied by this app
-  for the non-owner.
+- Read / Select / Print / Email require an explicit Read share,
+- Write requires an explicit Write share,
+- Share requires an explicit Share right,
+- other destructive or administrative permission types are denied by this app.
 
 `Administrator` bypasses this additional fence.
 
-## 3. Existing Task visibility also becomes owner/share based
+## 4. Existing Task visibility when enabled
 
-For a non-Administrator user, an existing Task is visible through the app only
+For a non-Administrator user, an existing Task is in scope through this app only
 when either:
 
 - the user is the Task owner, or
 - the Task has an explicit user-specific `DocShare` with Read access.
 
 Task access is independent of Project access. A user may therefore be able to
-open a Task while being unable to open its linked Project.
+open an explicitly accessible Task while being unable to open its parent Project.
 
 For a non-owner Task:
 
-- Read / Select / Print / Email require an explicit Read share.
-- Write requires an explicit Write share.
-- Share requires an explicit Share right.
-- Other destructive or administrative permission types are denied by this app
-  for the non-owner.
+- Read / Select / Print / Email require an explicit Read share,
+- Write requires an explicit Write share,
+- Share requires an explicit Share right,
+- other destructive or administrative permission types are denied by this app.
 
-Again, normal role permissions still apply in addition to this scope check.
-Ownership or a DocShare does not create general DocType capability that the user
-otherwise lacks.
+Normal role permissions still apply in addition to this scope check. Ownership
+or a DocShare does not create general DocType capability the user otherwise
+lacks.
 
-## 4. Existing assignments may preserve Task access
+## 5. Existing assignments may preserve Task access
 
 ERPNext assignment normally creates the user-specific Task Read access used by
-an assignee. Where that Read share exists, the assigned user can continue to
-see the Task even if the linked Project is private to them.
+an assignee. Where that Read share exists, the assigned user can continue to see
+the Task even if the linked Project is private to them.
 
-The app's Task ACL does **not** directly test whether a user is assigned. It
-tests ownership or the resulting explicit Task share.
+The app's Task ACL does **not** directly test assignment. It tests ownership or
+the resulting explicit Task share. The controlled worker actions separately
+require an active Task assignment.
 
-The controlled worker actions separately require the user to be an active Task
-assignee.
+## 6. Creation permissions are not granted
 
-## 5. New Project and Task creation is not granted by installation
+Enabling ERPNext Project Access does not automatically give users permission to
+create Projects or Tasks.
 
-Installing the app does not automatically give users permission to create
-Projects or Tasks.
+Creation remains controlled by ordinary ERPNext role permissions. A new
+evaluation site may therefore need a local creator role such as the reference
+configuration in [ROLE_SETUP.md](ROLE_SETUP.md).
 
-Creation of new Projects and Tasks remains controlled by ordinary ERPNext role
-permissions.
-
-This is why a new evaluation site may need a local creator role such as the
-reference configuration described in [ROLE_SETUP.md](ROLE_SETUP.md).
-
-## 6. New controlled Task actions become available conditionally
-
-The app adds Task form logic for narrowly controlled status transitions.
+## 7. Controlled Task actions when enabled
 
 For an active assignee who can Read the Task:
 
@@ -107,81 +113,90 @@ Pending Review → Working
 Pending Review → Completed
 ```
 
-Installing the app does **not** automatically change the status of any existing
-Task. These actions appear only when the logged-in user and current Task status
-satisfy the app's authorization rules.
+Enabling the app does **not** automatically change the status of an existing
+Task. The actions become available only when user/status authorization conditions
+are satisfied.
 
 The controlled actions do not grant general Task Write permission.
 
-## 7. What installation does not automatically do
+## 8. What enabling does not automatically do
 
-The current alpha does not automatically:
+Enabling does not automatically:
 
 - create mandatory Worker or Creator roles,
 - convert Website Users into System Users,
 - grant Desk access,
 - share Projects or Tasks,
-- change Project ownership,
-- change Task ownership,
+- change Project or Task ownership,
 - reassign Tasks,
 - change existing Task statuses,
 - grant general Project or Task Write permission,
 - make a Task's parent Project visible to the Task assignee.
 
-The deployment remains responsible for its own user, role, Desk-access, and
+The deployment remains responsible for its own users, roles, Desk access and
 sharing configuration.
 
-## 8. A concrete before/after example
+## 9. Before/after example
 
-Imagine an existing user with a broad role that previously allowed them to see
-all Projects and Tasks.
-
-Before ERPNext Project Access:
+Before enabling:
 
 ```text
-Role says user can Read Project/Task
+Native ERPNext/Frappe permission model
         ↓
-user may see many records allowed by the normal ERPNext model
+normal site behavior
 ```
 
-After ERPNext Project Access:
+After enabling:
 
 ```text
-Normal role says user can Read Project/Task
+Normal role permission
         ↓
 ERPNext Project Access additionally asks:
-    owner OR explicit Read share?
+    owner OR explicit share?
         ↓
-Yes → record may be accessible
-No  → record is outside that user's scope
+Yes → record may remain accessible
+No  → record is outside that user's app-defined scope
 ```
 
-Therefore, installing this app on an existing site can intentionally reduce
-visibility even when no role configuration is changed afterward.
+## 10. Existing alpha.1 installations upgrading to alpha.2
 
-## 9. Recommended pre-install review for an existing site
+`v0.1.0-alpha.1` was active immediately after installation. An alpha.1 site that
+upgrades to alpha.2 through `bench migrate` is therefore kept **enabled** by a
+migration patch.
 
-Before enabling the alpha on a production site with existing Project/Task data,
-review at least:
+This is intentional. Automatically disabling during an upgrade could broaden
+Project/Task access for users with broad native ERPNext roles.
 
-- who currently owns important Projects and Tasks,
+Fresh alpha.2 installs and alpha.1 upgrades therefore have different safe
+defaults:
+
+```text
+Fresh alpha.2 install → disabled
+Alpha.1 → alpha.2 upgrade → remains enabled
+```
+
+The administrator may then disable deliberately after reviewing native ERPNext
+access behavior.
+
+## 11. Recommended pre-activation review
+
+Before enabling on an existing production site, review at least:
+
+- who owns important Projects and Tasks,
 - which users rely on broad role-based visibility,
 - which Projects and Tasks already have explicit user shares,
 - which Tasks are assigned to users,
-- whether any managers currently depend on broad delete or administrative
-  access to Projects/Tasks they do not own.
+- whether managers depend on broad delete/admin rights for documents they do not
+  own.
 
-A staging installation is strongly recommended so that representative users can
-compare their Project and Task lists before and after the app is enabled.
+Use staging and representative users first.
 
-## 10. Summary
+## 12. Summary
 
-The most important behavioral change is:
+For alpha.2, **installation is passive; activation is not**.
+
+The main behavioral change after activation is:
 
 > **Project and Task scope becomes owner-or-explicit-share based for
 > non-Administrator users, while normal ERPNext role permissions continue to
-> govern their general capabilities.**
-
-The Task worker/reviewer buttons are an additional capability, but the access
-fence is the change most likely to affect an existing ERPNext installation
-immediately after installation.
+> govern general capabilities.**

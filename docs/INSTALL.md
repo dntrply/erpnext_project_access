@@ -1,110 +1,188 @@
-# Install and Uninstall
+# Install, Activate, Disable and Uninstall
 
-> **Status: Alpha**
+> **Status: alpha.2 development**
 >
-> The commands below are for a self-managed Frappe/ERPNext Bench. Deployment
-> platforms such as Frappe Cloud may expose equivalent install/uninstall actions
-> through their own UI.
+> These commands are for a self-managed Frappe/ERPNext Bench. Managed platforms
+> such as Frappe Cloud may expose equivalent actions through their own UI.
 
-## 1. Before installing
+## 1. Fresh alpha.2 installation is passive
 
-Installing ERPNext Project Access is **not passive** on a site that already has
-Projects and Tasks. Once the app hooks are active, non-Administrator Project and
-Task access is additionally restricted to records the user owns or that have
-been explicitly shared with that user.
+A fresh alpha.2 installation is **disabled by default**. Installing the app does
+not by itself apply the Project/Task owner-share fence or controlled Task
+workflow.
 
-Read [INSTALLATION_EFFECTS.md](INSTALLATION_EFFECTS.md) before installing on an
-existing site. For this alpha, use a test/staging site first.
+The policy changes only after a System Manager explicitly enables:
 
-## 2. Install the tagged alpha release
+**ERPNext Project Access Settings → Enable ERPNext Project Access**
 
-For reproducible testing, install the tagged release rather than `main`.
+Read [ACTIVATION.md](ACTIVATION.md) and
+[INSTALLATION_EFFECTS.md](INSTALLATION_EFFECTS.md) before enabling on a site with
+existing Projects and Tasks.
 
-From the Bench directory:
+## 2. Install for alpha.2 development testing
+
+The alpha.2 activation switch is not yet a tagged release. Until validation is
+complete, test the development branch rather than treating it as a public
+release:
 
 ```bash
-bench get-app --branch v0.1.0-alpha.1 \
+cd /path/to/frappe-bench
+bench get-app --branch alpha2-config-switch \
   https://github.com/dntrply/erpnext_project_access.git
 ```
 
-Then install the app on the target site:
+Install it on the target site:
 
 ```bash
 bench --site your-site.example.com install-app erpnext_project_access
 ```
 
-Run the normal site migration:
+Then migrate:
 
 ```bash
 bench --site your-site.example.com migrate
 ```
 
-Build the app assets if your deployment process does not already do so:
+Build assets if your deployment process does not already do so:
 
 ```bash
 bench build --app erpnext_project_access
 ```
 
-Reload/restart Frappe processes according to the deployment method used by the
-site. A self-managed production Bench may use `bench restart`; containerized
-installations and managed platforms use their own process/deployment mechanism.
+Reload/restart processes according to the deployment method. A self-managed
+production Bench may use `bench restart`; containerized and managed deployments
+have their own deployment/restart mechanism.
 
-Do not assume that one restart command applies to every deployment type.
+## 3. Verify that the app is installed but disabled
 
-## 3. Verify installation
-
-Run:
+Confirm installation:
 
 ```bash
 bench --site your-site.example.com list-apps
 ```
 
-Confirm that the output contains:
+The output should include:
 
 ```text
 erpnext_project_access
 ```
 
-Then review:
+Before enabling, log in as representative non-Administrator users and verify
+that Project and Task behavior still matches native ERPNext/Frappe behavior.
 
-- [INSTALLATION_EFFECTS.md](INSTALLATION_EFFECTS.md) — what changes immediately
-  because the app is active
-- [ROLE_SETUP.md](ROLE_SETUP.md) — reference System User / role setup
-- [HOWTO.md](HOWTO.md) — end-to-end worker/reviewer acceptance workflow
+A System Manager can then open **ERPNext Project Access Settings** and confirm
+that **Enable ERPNext Project Access** is unchecked.
 
-The documentation on `main` may be newer than the `v0.1.0-alpha.1` source tag.
-That is intentional: the alpha runtime code remains reproducible from the tag,
-while the living documentation continues to improve on `main`.
+## 4. Configure users and roles
 
-## 4. Before uninstalling
+The app does not install mandatory Worker or Creator roles.
 
-Uninstalling also changes behavior immediately because it removes the app's
-Project/Task permission hooks and Task form workflow actions from the site.
+Before activation, configure or reuse the roles appropriate to your site. For a
+reproducible reference setup, see [ROLE_SETUP.md](ROLE_SETUP.md).
 
-Read [UNINSTALLATION_EFFECTS.md](UNINSTALLATION_EFFECTS.md) before uninstalling,
-especially on a site where users have come to rely on the app's restricted
-visibility model.
+At minimum, participants in the Desk workflow must be System Users with Desk
+access. The restricted worker does not need general Task Write permission merely
+to use the controlled workflow.
 
-Frappe's `uninstall-app` command takes a site backup by default. Do **not** use
-`--no-backup` for this alpha unless you have a separate verified backup and a
+## 5. Enable the policy
+
+As a **System Manager**:
+
+1. Search Desk for **ERPNext Project Access Settings**.
+2. Open the settings document.
+3. Review the warning.
+4. Check **Enable ERPNext Project Access**.
+5. Save.
+6. Refresh any already-open Project/Task forms.
+
+Then run the acceptance workflow in [HOWTO.md](HOWTO.md).
+
+No process restart is required merely to toggle the setting; subsequent requests
+read the new setting.
+
+## 6. Disable without uninstalling
+
+Disabling is the preferred first rollback step.
+
+As a System Manager:
+
+1. Open **ERPNext Project Access Settings**.
+2. Uncheck **Enable ERPNext Project Access**.
+3. Save.
+4. Refresh existing Project/Task forms.
+5. Re-test representative users.
+
+Once disabled, this app no longer narrows Project/Task access and no longer
+offers the controlled Task actions. Native ERPNext/Frappe permissions and any
+other installed customizations remain in force.
+
+Disabling does not undo Task statuses, ownership, assignments, shares or local
+role configuration that changed while the app was enabled.
+
+## 7. Upgrading an existing alpha.1 installation
+
+`v0.1.0-alpha.1` was active immediately after installation. To avoid an upgrade
+unexpectedly broadening access, an existing alpha.1 site remains **enabled** when
+upgraded to alpha.2 through `bench migrate`.
+
+For development testing from an existing checkout:
+
+```bash
+cd /path/to/frappe-bench/apps/erpnext_project_access
+git fetch origin
+git switch alpha2-config-switch
+git pull --ff-only
+```
+
+Then from the Bench directory:
+
+```bash
+bench --site your-site.example.com migrate
+bench build --app erpnext_project_access
+```
+
+Restart/redeploy only as required by your deployment method.
+
+After migration, confirm **ERPNext Project Access Settings** is enabled and
+verify that the previously validated restricted-access behavior still holds.
+
+The migration patch intentionally preserves alpha.1 behavior. Do not assume an
+upgrade will disable the app automatically.
+
+## 8. Before uninstalling
+
+Prefer this sequence:
+
+```text
+Disable
+  ↓
+verify native ERPNext access
+  ↓
+uninstall only if the app is no longer wanted
+```
+
+Read [UNINSTALLATION_EFFECTS.md](UNINSTALLATION_EFFECTS.md), especially if users
+have relied on the restricted visibility model.
+
+Frappe's `uninstall-app` takes a site backup by default. Do not use
+`--no-backup` for this alpha unless you have a separately verified backup and a
 specific reason to bypass the default.
 
-## 5. Preview the uninstall
+## 9. Preview uninstall
 
-First run Frappe's dry run:
+Run Frappe's dry run first:
 
 ```bash
 bench --site your-site.example.com uninstall-app erpnext_project_access --dry-run
 ```
 
-Review the output before continuing.
+Review the output before proceeding.
 
-The current alpha does not replace ERPNext's standard Project or Task DocTypes,
-but Frappe's uninstall mechanism is generally destructive for data owned by the
-app being removed. Always inspect the dry run rather than assuming an uninstall
-is harmless.
+The app hooks into ERPNext's standard Project and Task DocTypes rather than
+replacing them, but Frappe uninstall is generally destructive for app-owned
+metadata/data. The dry run should still be reviewed.
 
-## 6. Uninstall from the site
+## 10. Uninstall from the site
 
 Run:
 
@@ -112,59 +190,44 @@ Run:
 bench --site your-site.example.com uninstall-app erpnext_project_access
 ```
 
-Confirm the interactive prompt when satisfied with the backup and dry-run
-review.
+Confirm the prompt after reviewing the backup/dry run.
 
-After uninstall, verify that the app is no longer installed on the site:
+Then verify:
 
 ```bash
 bench --site your-site.example.com list-apps
 ```
 
-`erpnext_project_access` should no longer appear.
+`erpnext_project_access` should no longer appear for that site.
 
-If users still appear to see cached Task form buttons or stale permission
-behavior, clear the site cache and reload/restart the site's Frappe processes
-using the mechanism appropriate to that deployment:
+Clear cache if needed:
 
 ```bash
 bench --site your-site.example.com clear-cache
 ```
 
-For a traditional self-managed production Bench, a process restart may also be
-appropriate:
+Reload/restart processes according to your deployment method so hooks/assets are
+fully refreshed.
 
-```bash
-bench restart
-```
+## 11. Removing app source from the Bench
 
-Do not use that command blindly on containerized or managed deployments; use the
-platform's normal restart/deploy mechanism instead.
+Uninstalling from a site and removing source code from the Bench are separate
+operations. If no site on the Bench uses the app and you intentionally want to
+remove its source, use the Bench/app-management procedure appropriate to your
+deployment only after confirming it is uninstalled from every relevant site.
 
-## 7. Optional: remove the app source from the Bench
+Do not remove the source checkout first and then attempt a site uninstall.
 
-`uninstall-app` removes the app from a **site**. It is different from removing
-the app source from the whole Bench.
+## 12. What persists after disable/uninstall
 
-Only after the app has been uninstalled from every site on that Bench, and only
-if you no longer want the source present, you may use:
+Neither disabling nor uninstalling should be treated as a time-machine rollback.
+Ordinary site state may remain, including:
 
-```bash
-bench remove-app erpnext_project_access
-```
+- explicit Project/Task shares,
+- locally created reference roles,
+- user role assignments and System User status,
+- Project/Task ownership changes,
+- Task statuses reached while the app was enabled,
+- assignment/ToDo lifecycle changes already performed by ERPNext.
 
-Do not run `remove-app` merely to disable the app on one site when other sites on
-the same Bench may still use it.
-
-## 8. What uninstall does not reverse
-
-Uninstall is not a historical rollback of everything users did while the app was
-installed.
-
-In particular, uninstall does not automatically restore previous Task statuses,
-reopen completed assignments, delete shares created during the trial, delete
-locally created roles, change Users back to Website Users, or undo Project/Task
-ownership changes made by administrators.
-
-For the detailed before/after behavior, see
-[UNINSTALLATION_EFFECTS.md](UNINSTALLATION_EFFECTS.md).
+See [UNINSTALLATION_EFFECTS.md](UNINSTALLATION_EFFECTS.md) for details.
